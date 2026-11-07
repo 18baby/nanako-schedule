@@ -1,0 +1,40 @@
+# 폴더명이 한글이라 프로젝트 이름을 명시 (영문 소문자/숫자/-/_ 만 가능)
+name: nanako-schedule
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-schedule}
+      POSTGRES_USER: ${POSTGRES_USER:-schedule}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-schedule_pw}
+      TZ: Asia/Seoul
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-schedule}:${POSTGRES_PASSWORD:-schedule_pw}@db:5432/${POSTGRES_DB:-schedule}
+      TZ: Asia/Seoul
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

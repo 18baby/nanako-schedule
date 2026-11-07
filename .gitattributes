@@ -1,0 +1,2 @@
+# Docker/리눅스 컨테이너에서 쓰이는 파일이 많으므로 줄바꿈은 LF 로 통일
+* text=auto eol=lf
